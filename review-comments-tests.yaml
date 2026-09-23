@@ -1,7 +1,83 @@
 # review-comments-tests.yaml
 #
 # Test suite loaded by promptfooconfig.yaml via `tests: file://review-comments-tests.yaml`.
-# Each entry is a promptfoo test case: { vars, assert, description }.
-# Add new test cases below.
+#
+# Philosophy: heavily weighted to DETERMINISTIC checks (parse the JSON output
+# contract and verify structure + per-comment classification). Rubrics fill only
+# the gaps deterministic checks can't cover (semantic reasoning quality).
+#
+# The skill emits human-readable prose PLUS a machine-readable summary block:
+#   ```disposition
+#   comment-1: FIX
+#   ...
+#   ```
+# with each verdict in FIX | OPTIONAL | OUT_OF_SCOPE | REJECT | DEPENDENT.
 
-[]
+- description: 'Fixture PR #1 — classify each review comment disposition'
+  vars:
+    code: file://fixture/pr-under-review.md
+    comments: file://fixture/comments/pr-review-comments.md
+  assert:
+    # ---- Deterministic: structure of the hybrid output contract ----
+    - type: javascript
+      value: file://eval-review-comments.js:hasDispositionBlock
+      metric: has-disposition-block
+    - type: javascript
+      value: file://eval-review-comments.js:hasAllCommentIds
+      metric: all-ids-present
+    - type: javascript
+      value: file://eval-review-comments.js:noExtraCommentIds
+      metric: no-extra-ids
+    - type: javascript
+      value: file://eval-review-comments.js:allDispositionsValid
+      metric: dispositions-valid-enum
+
+    # ---- Deterministic: per-comment classification vs ground truth ----
+    - type: javascript
+      value: file://eval-review-comments.js:classifyComment1
+      metric: comment-1-FIX
+    - type: javascript
+      value: file://eval-review-comments.js:classifyComment2
+      metric: comment-2-FIX
+    - type: javascript
+      value: file://eval-review-comments.js:classifyComment3
+      metric: comment-3-FIX
+    - type: javascript
+      value: file://eval-review-comments.js:classifyComment4
+      metric: comment-4-OPTIONAL
+    - type: javascript
+      value: file://eval-review-comments.js:classifyComment5
+      metric: comment-5-OUT_OF_SCOPE
+    - type: javascript
+      value: file://eval-review-comments.js:classifyComment6
+      metric: comment-6-REJECT
+    - type: javascript
+      value: file://eval-review-comments.js:classifyComment7
+      metric: comment-7-DEPENDENT
+
+    # ---- Rubric: semantic gaps deterministic checks can't cover ----
+    # GATED: fail automatically unless the machine-readable disposition block is
+    # present AND classifies this comment correctly — the reasoning is only
+    # graded once the structural contract is met.
+    # WHY comment-6 is rejected: the reasoning must show subtract(5,2)=3 is correct.
+    - type: llm-rubric
+      value: >-
+        First check the machine-readable disposition block at the end of the
+        response. If there is no fenced ```disposition``` block, or it does not
+        contain the line "comment-6: REJECT", score 0 and stop. Otherwise, score
+        based on whether the prose justification for comment-6 correctly explains
+        that subtract(5, 2) returning 3 is the intended behavior, so the
+        reviewer's "operand order is backwards" claim is wrong.
+      metric: comment-6-reason-correct
+      threshold: 0.7
+    # WHY comment-7 is dependent: reasoning must name the bug fixes as prerequisites.
+    - type: llm-rubric
+      value: >-
+        First check the machine-readable disposition block at the end of the
+        response. If there is no fenced ```disposition``` block, or it does not
+        contain the line "comment-7: DEPENDENT", score 0 and stop. Otherwise,
+        score based on whether the prose justification for comment-7 explains
+        that the regression tests depend on the divide-by-zero and power bugs
+        (comment-1 / comment-2) being fixed first.
+      metric: comment-7-reason-dependency
+      threshold: 0.7

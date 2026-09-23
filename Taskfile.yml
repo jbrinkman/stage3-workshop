@@ -15,7 +15,9 @@ tasks:
     desc: 'Run evals and print a compact metrics table (per-named-metric + overall pass rate) to paste into ITERATION_LOG.md'
     cmds:
       - "mkdir -p tmp"
-      - "npx promptfoo eval --no-cache --config promptfooconfig.yaml --output tmp/metrics.json"
+      # A failing eval is the expected Red state during TDD; don't let a non-zero
+      # exit stop the summary. `|| true` keeps the task going to summarize.js.
+      - "npx promptfoo eval --no-cache --config promptfooconfig.yaml --output tmp/metrics.json || true"
       - "node scripts/summarize.js tmp/metrics.json"
       - "rm -f tmp/metrics.json"
 

@@ -3,7 +3,7 @@ description: Evaluation Driven Development demonstration with promptfoo
 
 # Define prompts to test - the skill prompt under development (TDD)
 prompts:
-  - "@review-pr-comments-prompt.md {{request}}"
+  - "file://review-pr-comments-prompt.md"
 
 # External evaluation script for custom deterministic evaluations
 # This script contains custom assertion functions used in tests

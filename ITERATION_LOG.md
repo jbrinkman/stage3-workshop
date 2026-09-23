@@ -22,18 +22,33 @@ Every number below comes from a `task eval` run — nothing is hand-computed.
 
 ## Cumulative Results
 
-Pass rate per test case (and overall), by step. Add a column per step.
+Deterministic-heavy suite (11 deterministic + 2 gated rubric assertions) against
+fixture PR #1. Pass rate per metric, by step.
 
-| Test case / metric         | Step 0 (NOP) |
-|----------------------------|:------------:|
-| _(no real assertions yet)_ | —            |
-| **Tests passed**           | 0 / 0        |
-| **Pass rate**              | n/a          |
-| **Gate (all pass)**        | —            |
+| Metric                          | Type            | 🔴 Step 1 (Red) |
+|---------------------------------|-----------------|:---------------:|
+| has-disposition-block           | deterministic   | 0%              |
+| all-ids-present                 | deterministic   | 0%              |
+| no-extra-ids                    | deterministic   | 100%¹           |
+| dispositions-valid-enum         | deterministic   | 0%              |
+| comment-1-FIX                   | deterministic   | 0%              |
+| comment-2-FIX                   | deterministic   | 0%              |
+| comment-3-FIX                   | deterministic   | 0%              |
+| comment-4-OPTIONAL              | deterministic   | 0%              |
+| comment-5-OUT_OF_SCOPE          | deterministic   | 0%              |
+| comment-6-REJECT                | deterministic   | 0%              |
+| comment-7-DEPENDENT             | deterministic   | 0%              |
+| comment-6-reason-correct        | rubric (gated)  | 0%              |
+| comment-7-reason-dependency     | rubric (gated)  | 0%              |
+| **Overall test case**           |                 | **❌ FAIL**     |
 
-> Step 0 is the baseline: the prompt is a NOP ("You are a helpful assistant.")
-> and `review-comments-tests.yaml` is empty, so there are no real assertions to
-> fail yet. The first authored evals land in Step 1 and are expected to fail Red.
+¹ `no-extra-ids` is a vacuous pass at Red: the NOP output parses zero comment
+ids, so "no extra ids" is trivially true. It becomes load-bearing once the
+prompt emits real ids.
+
+> Step 0 (prior): NOP prompt, empty suite — no real assertions. Superseded by
+> Step 1, which adds the real deterministic-heavy eval suite and captures the
+> Red baseline below.
 
 ---
 
@@ -71,3 +86,45 @@ wired end-to-end (provider fires, prompt loads, results write).
 > no instructions telling it what dispositions exist or how to decide. Step 1
 > records that Red baseline; subsequent steps build the prompt until the
 > assertions pass Green.
+
+
+---
+
+## 🔴 Step 1 — Red: deterministic-heavy suite, NOP prompt fails
+
+**Date:** 2026-09-23
+**Prompt:** `review-pr-comments-prompt.md` — still a NOP ("You are a helpful
+assistant.") that echoes the PR source and comments. No classification logic.
+**Tests:** `review-comments-tests.yaml` — 11 deterministic + 2 gated rubric
+assertions against fixture PR #1.
+
+### The output contract under test (hybrid)
+
+The skill must produce human-readable prose AND end with a machine-readable
+block, one verdict per comment id. Verdict vocabulary:
+`FIX · OPTIONAL · OUT_OF_SCOPE · REJECT · DEPENDENT`.
+
+**Eval philosophy:** deterministic-heavy (~85%). `eval-review-comments.js` parses
+the disposition block and checks structure + per-comment classification against
+ground truth. The 2 rubrics grade only the prose *reasoning* quality that
+parsing can't judge — and are **gated**: they score 0 unless the block parses
+and carries the correct verdict, so reasoning is never credited without structure.
+
+### Results — Red baseline
+
+Overall: **0/1 test case (FAIL)**. 12 of 13 metrics at 0%; `no-extra-ids` is a
+vacuous 100% (zero ids parsed → zero extras). See the cumulative table above.
+
+### Root cause
+
+The NOP prompt has no notion of the disposition vocabulary or the output block,
+so it emits free-form prose. Every structural and classification check fails,
+and the gated rubrics correctly refuse to credit reasoning with no valid block.
+
+### Hypothesis (for Step 2)
+
+> If the prompt (a) defines the 5-verdict vocabulary with decision criteria for
+> each disposition, (b) instructs the model to address every comment id, and
+> (c) specifies the trailing disposition block format, then the structural and
+> classification checks flip Green and the gated reasoning rubrics become live.
+> Step 2 writes that prompt and records the Green delta.
