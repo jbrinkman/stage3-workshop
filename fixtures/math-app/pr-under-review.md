@@ -1,7 +1,7 @@
 # Pull Request #1 — Source Under Review
 
-> Generated from `fixture/source/*.js` for eval loading (text, not executable).
-> Regenerate with `task fixture:build` after editing the source files.
+> Generated from `fixtures/math-app/source/*.js` for eval loading (text, not
+> executable). Keep in sync when editing the source files.
 
 ## operations.js
 

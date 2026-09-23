@@ -2,7 +2,7 @@
 
 **PR #1 — Add core arithmetic operations and CLI calculator**
 
-Source under review lives in `fixture/source/` (`operations.js`, `calculator.js`, `operations.test.js`).
+Source under review lives in `fixtures/math-app/source/` (`operations.js`, `calculator.js`, `operations.test.js`).
 
 Below are the review comments left on this PR. Each has an id so tests can assert
 how the skill decides to handle it.

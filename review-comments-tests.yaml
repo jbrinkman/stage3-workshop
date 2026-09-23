@@ -13,10 +13,10 @@
 #   ```
 # with each verdict in FIX | OPTIONAL | OUT_OF_SCOPE | REJECT | DEPENDENT.
 
-- description: 'Fixture PR #1 — classify each review comment disposition'
+- description: 'math-app fixture — classify each review comment disposition'
   vars:
-    code: file://fixture/pr-under-review.md
-    comments: file://fixture/comments/pr-review-comments.md
+    code: file://fixtures/math-app/pr-under-review.md
+    comments: file://fixtures/math-app/comments.md
   assert:
     # ---- Deterministic: structure of the hybrid output contract ----
     - type: javascript
