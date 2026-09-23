@@ -1,0 +1,7 @@
+# review-comments-tests.yaml
+#
+# Test suite loaded by promptfooconfig.yaml via `tests: file://review-comments-tests.yaml`.
+# Each entry is a promptfoo test case: { vars, assert, description }.
+# Add new test cases below.
+
+[]
