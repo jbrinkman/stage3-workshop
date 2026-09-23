@@ -11,6 +11,15 @@ tasks:
     cmds:
       - "npx promptfoo eval --no-cache --config promptfooconfig.yaml"
 
+  capture:
+    desc: 'Run evals and save step results to results/<STEP>.{json,html} (e.g. task capture STEP=step-0)'
+    requires:
+      vars: [STEP]
+    cmds:
+      - "mkdir -p results"
+      - "npx promptfoo eval --no-cache --config promptfooconfig.yaml --output results/{{.STEP}}.json --output results/{{.STEP}}.html"
+      - 'echo "Captured results/{{.STEP}}.json and results/{{.STEP}}.html"'
+
   view:
     desc: Open the Promptfoo dashboard with all evaluation history
     cmds:

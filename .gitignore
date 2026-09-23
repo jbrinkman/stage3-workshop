@@ -1,8 +1,13 @@
 # Promptfoo outputs
-*results.html
-*results.json
-*results.csv
+# Ignore the transient top-level output a bare `task eval` drops in the CWD...
+/results.html
+/results.json
+/results.csv
 *.log
+
+# ...but DO track the per-step results captured under results/ (certification
+# evidence: shows measurable improvement across Step-N tags).
+!results/
 
 # Node modules
 node_modules/

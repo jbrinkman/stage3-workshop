@@ -1,0 +1,244 @@
+{
+  "evalId": "eval-DDQ-2026-09-23T13:16:00",
+  "results": {
+    "version": 3,
+    "timestamp": "2026-09-23T13:16:00.387Z",
+    "prompts": [
+      {
+        "id": "dfa9e37cfb051c5ec233c5755229f069baf63c734b583422a876587f0bfe1ebc",
+        "raw": "@review-pr-comments-prompt.md {{request}}",
+        "label": "@review-pr-comments-prompt.md {{request}}",
+        "provider": "Kiro Sonnet",
+        "metrics": {
+          "score": 1,
+          "testPassCount": 1,
+          "testFailCount": 0,
+          "testErrorCount": 0,
+          "assertPassCount": 0,
+          "assertFailCount": 0,
+          "totalLatencyMs": 13273,
+          "tokenUsage": {
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "total": 0,
+            "numRequests": 1,
+            "completionDetails": {
+              "reasoning": 0,
+              "acceptedPrediction": 0,
+              "rejectedPrediction": 0,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0
+            },
+            "assertions": {
+              "total": 0,
+              "prompt": 0,
+              "completion": 0,
+              "cached": 0,
+              "numRequests": 0,
+              "completionDetails": {
+                "reasoning": 0,
+                "acceptedPrediction": 0,
+                "rejectedPrediction": 0,
+                "cacheReadInputTokens": 0,
+                "cacheCreationInputTokens": 0
+              }
+            }
+          },
+          "namedScores": {},
+          "namedScoresCount": {},
+          "namedScoreWeights": {},
+          "cost": 0
+        }
+      }
+    ],
+    "results": [
+      {
+        "cost": 0,
+        "gradingResult": {
+          "pass": true,
+          "score": 1,
+          "reason": "No assertions",
+          "tokensUsed": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 0
+          }
+        },
+        "id": "b6fac591-a8dc-4cbc-bbc5-9cbde05abeb6",
+        "latencyMs": 13273,
+        "namedScores": {},
+        "prompt": {
+          "raw": "@review-pr-comments-prompt.md ",
+          "label": "@review-pr-comments-prompt.md {{request}}",
+          "config": {
+            "provider": {
+              "scriptPath": " node ./kiro.js",
+              "options": {
+                "id": "exec: node ./kiro.js",
+                "config": {
+                  "model": "claude-sonnet-4.6",
+                  "basePath": "."
+                },
+                "env": {}
+              },
+              "delay": 0,
+              "label": "Kiro Sonnet"
+            }
+          }
+        },
+        "promptId": "dfa9e37cfb051c5ec233c5755229f069baf63c734b583422a876587f0bfe1ebc",
+        "promptIdx": 0,
+        "provider": {
+          "id": "exec: node ./kiro.js",
+          "label": "Kiro Sonnet"
+        },
+        "response": {
+          "output": "I'll read the file to review it.This prompt file is extremely minimal. It contains only a generic instruction that doesn't provide any specific guidance for reviewing PR comments.\n\nFor a prompt meant to evaluate PR comment quality, you'll want to include:\n\n1. **Clear role definition** - What perspective should the reviewer take?\n2. **Evaluation criteria** - What makes a good PR comment?\n3. **Output format** - How should the review be structured?\n4. **Context awareness** - What information about the PR/code should be considered?\n5. **Tone and style guidance** - What tone is appropriate for feedback?\n\nWould you like me to:\n1. **Expand this prompt** with comprehensive PR comment review criteria\n2. **See examples** of well-structured review prompts from this project (like the rubric evaluations in the config)\n3. **Create test cases** in promptfooconfig.yaml to evaluate this prompt\n4. Something else?"
+        },
+        "score": 1,
+        "success": true,
+        "testCase": {
+          "vars": {},
+          "assert": [],
+          "options": {
+            "provider": {
+              "scriptPath": " node ./kiro.js",
+              "options": {
+                "id": "exec: node ./kiro.js",
+                "config": {
+                  "model": "claude-sonnet-4.6",
+                  "basePath": "."
+                },
+                "env": {}
+              },
+              "delay": 0,
+              "label": "Kiro Sonnet"
+            }
+          },
+          "metadata": {}
+        },
+        "testIdx": 0,
+        "tokenUsage": {
+          "prompt": 0,
+          "completion": 0,
+          "cached": 0,
+          "total": 0,
+          "numRequests": 1,
+          "completionDetails": {
+            "reasoning": 0,
+            "acceptedPrediction": 0,
+            "rejectedPrediction": 0,
+            "cacheReadInputTokens": 0,
+            "cacheCreationInputTokens": 0
+          },
+          "assertions": {
+            "total": 0,
+            "prompt": 0,
+            "completion": 0,
+            "cached": 0,
+            "numRequests": 1,
+            "completionDetails": {
+              "reasoning": 0,
+              "acceptedPrediction": 0,
+              "rejectedPrediction": 0,
+              "cacheReadInputTokens": 0,
+              "cacheCreationInputTokens": 0
+            }
+          }
+        },
+        "vars": {},
+        "metadata": {
+          "_promptfooFileMetadata": {}
+        },
+        "failureReason": 0
+      }
+    ],
+    "stats": {
+      "successes": 1,
+      "failures": 0,
+      "errors": 0,
+      "tokenUsage": {
+        "prompt": 0,
+        "completion": 0,
+        "cached": 0,
+        "total": 0,
+        "numRequests": 1,
+        "completionDetails": {
+          "reasoning": 0,
+          "acceptedPrediction": 0,
+          "rejectedPrediction": 0,
+          "cacheReadInputTokens": 0,
+          "cacheCreationInputTokens": 0
+        },
+        "assertions": {
+          "total": 0,
+          "prompt": 0,
+          "completion": 0,
+          "cached": 0,
+          "numRequests": 0,
+          "completionDetails": {
+            "reasoning": 0,
+            "acceptedPrediction": 0,
+            "rejectedPrediction": 0,
+            "cacheReadInputTokens": 0,
+            "cacheCreationInputTokens": 0
+          }
+        }
+      },
+      "durationMs": 13308,
+      "evaluationDurationMs": 13308
+    }
+  },
+  "config": {
+    "tags": {},
+    "description": "Evaluation Driven Development demonstration with promptfoo",
+    "prompts": [
+      "@review-pr-comments-prompt.md {{request}}"
+    ],
+    "providers": [
+      {
+        "id": "exec: node ./kiro.js",
+        "label": "Kiro Sonnet",
+        "config": {
+          "model": "claude-sonnet-4.6"
+        }
+      }
+    ],
+    "tests": [],
+    "env": {},
+    "defaultTest": {
+      "options": {
+        "provider": "Kiro Sonnet"
+      },
+      "vars": {},
+      "assert": [],
+      "metadata": {}
+    },
+    "outputPath": [
+      "results/step-0.json",
+      "results/step-0.html"
+    ],
+    "extensions": [],
+    "metadata": {},
+    "evaluateOptions": {}
+  },
+  "shareableUrl": null,
+  "metadata": {
+    "promptfooVersion": "0.121.20",
+    "nodeVersion": "v24.15.0",
+    "platform": "darwin",
+    "arch": "arm64",
+    "exportedAt": "2026-09-23T13:16:13.750Z",
+    "evaluationCreatedAt": "2026-09-23T13:16:00.387Z"
+  },
+  "runtimeOptions": {
+    "eventSource": "cli",
+    "showProgressBar": true,
+    "repeat": 1,
+    "maxConcurrency": 4,
+    "cache": false
+  }
+}
