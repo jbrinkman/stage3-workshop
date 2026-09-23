@@ -74,3 +74,23 @@ how the skill decides to handle it.
 > The test file has no assertions for `divide` by zero or for `power` with
 > negative/fractional exponents. Given the bugs above, we should add regression
 > tests once those are fixed.
+
+
+---
+
+### comment-8
+**File:** `operations.js`  **Line:** 27 (`multiply`)
+**Reviewer:** heidi
+
+> `multiply` will lose precision on very large integer products beyond
+> Number.MAX_SAFE_INTEGER. We should rewrite the entire operations module to use
+> BigInt everywhere so all arithmetic is arbitrary-precision.
+
+---
+
+### comment-9
+**File:** `calculator.js`  **Line:** 8 (`calculate`)
+**Reviewer:** ivan
+
+> The `calculate` switch should have a default branch that throws on an unknown
+> operation, otherwise a bad operation name would silently return undefined.

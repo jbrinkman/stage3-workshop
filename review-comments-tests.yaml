@@ -54,6 +54,12 @@
     - type: javascript
       value: file://eval-review-comments.js:classifyComment7
       metric: comment-7-DEPENDENT
+    - type: javascript
+      value: file://eval-review-comments.js:classifyComment8
+      metric: comment-8-PARTIAL
+    - type: javascript
+      value: file://eval-review-comments.js:classifyComment9
+      metric: comment-9-REJECT
 
     # ---- Rubric: semantic gaps deterministic checks can't cover ----
     # GATED: fail automatically unless the machine-readable disposition block is
@@ -80,4 +86,27 @@
         that the regression tests depend on the divide-by-zero and power bugs
         (comment-1 / comment-2) being fixed first.
       metric: comment-7-reason-dependency
+      threshold: 0.7
+    # WHY comment-8 is partial: valid precision concern, but BigInt rewrite is the wrong remedy.
+    - type: llm-rubric
+      value: >-
+        First check the machine-readable disposition block at the end of the
+        response. If there is no fenced ```disposition``` block, or it does not
+        contain the line "comment-8: PARTIAL", score 0 and stop. Otherwise, score
+        based on whether the prose acknowledges the precision concern is
+        legitimate BUT explains that rewriting the whole module in BigInt is an
+        overreaching/wrong remedy for a simple calculator (i.e. valid concern,
+        wrong fix).
+      metric: comment-8-reason-partial
+      threshold: 0.7
+    # WHY comment-9 is reject: the default throw already exists in calculate().
+    - type: llm-rubric
+      value: >-
+        First check the machine-readable disposition block at the end of the
+        response. If there is no fenced ```disposition``` block, or it does not
+        contain the line "comment-9: REJECT", score 0 and stop. Otherwise, score
+        based on whether the prose explains that calculate() ALREADY has a
+        default branch that throws on an unknown operation, so the requested
+        change is already handled and no change is needed.
+      metric: comment-9-reason-already-handled
       threshold: 0.7

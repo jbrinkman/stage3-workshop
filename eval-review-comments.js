@@ -17,7 +17,7 @@
 // classification deterministically. Rubric assertions cover only the prose
 // reasoning quality that parsing can't judge.
 
-const VALID_DISPOSITIONS = ['FIX', 'OPTIONAL', 'OUT_OF_SCOPE', 'REJECT', 'DEPENDENT'];
+const VALID_DISPOSITIONS = ['FIX', 'PARTIAL', 'OPTIONAL', 'OUT_OF_SCOPE', 'REJECT', 'DEPENDENT'];
 
 // Ground-truth expected disposition per comment id for fixture PR #1.
 const EXPECTED = {
@@ -28,6 +28,8 @@ const EXPECTED = {
   'comment-5': 'OUT_OF_SCOPE', // add a REST API / Express server
   'comment-6': 'REJECT', // subtract operand order claim is incorrect
   'comment-7': 'DEPENDENT', // regression tests depend on comment-1/comment-2
+  'comment-8': 'PARTIAL', // multiply precision concern is real, but rewrite-in-BigInt is the wrong/overreaching fix
+  'comment-9': 'REJECT', // calculate() already has a default throw — request is already handled
 };
 
 const COMMENT_IDS = Object.keys(EXPECTED);
@@ -120,6 +122,8 @@ module.exports = {
   classifyComment5: makeClassificationCheck('comment-5'),
   classifyComment6: makeClassificationCheck('comment-6'),
   classifyComment7: makeClassificationCheck('comment-7'),
+  classifyComment8: makeClassificationCheck('comment-8'),
+  classifyComment9: makeClassificationCheck('comment-9'),
   // exported for reuse/testing
   parseDispositions,
   EXPECTED,
