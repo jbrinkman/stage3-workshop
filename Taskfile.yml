@@ -11,14 +11,13 @@ tasks:
     cmds:
       - "npx promptfoo eval --no-cache --config promptfooconfig.yaml"
 
-  capture:
-    desc: 'Run evals and save step results to results/<STEP>.{json,html} (e.g. task capture STEP=step-0)'
-    requires:
-      vars: [STEP]
+  metrics:
+    desc: 'Run evals and print a compact metrics table (per-named-metric + overall pass rate) to paste into ITERATION_LOG.md'
     cmds:
-      - "mkdir -p results"
-      - "npx promptfoo eval --no-cache --config promptfooconfig.yaml --output results/{{.STEP}}.json --output results/{{.STEP}}.html"
-      - 'echo "Captured results/{{.STEP}}.json and results/{{.STEP}}.html"'
+      - "mkdir -p tmp"
+      - "npx promptfoo eval --no-cache --config promptfooconfig.yaml --output tmp/metrics.json"
+      - "node scripts/summarize.js tmp/metrics.json"
+      - "rm -f tmp/metrics.json"
 
   view:
     desc: Open the Promptfoo dashboard with all evaluation history
