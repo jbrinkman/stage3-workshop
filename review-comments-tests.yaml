@@ -17,6 +17,16 @@
   vars:
     code: file://fixtures/math-app/pr-under-review.md
     comments: file://fixtures/math-app/comments.md
+    expected:
+      comment-1: FIX
+      comment-2: FIX
+      comment-3: FIX
+      comment-4: OPTIONAL
+      comment-5: OUT_OF_SCOPE
+      comment-6: REJECT
+      comment-7: DEPENDENT
+      comment-8: PARTIAL
+      comment-9: REJECT
   assert:
     # ---- Deterministic: structure of the hybrid output contract ----
     - type: javascript
@@ -109,4 +119,81 @@
         default branch that throws on an unknown operation, so the requested
         change is already handled and no change is needed.
       metric: comment-9-reason-already-handled
+      threshold: 0.7
+
+- description: 'text-utils fixture — classify each review comment disposition'
+  vars:
+    code: file://fixtures/text-utils/pr-under-review.md
+    comments: file://fixtures/text-utils/comments.md
+    expected:
+      comment-1: FIX
+      comment-2: OUT_OF_SCOPE
+      comment-3: REJECT
+      comment-4: PARTIAL
+      comment-5: OUT_OF_SCOPE
+      comment-6: OPTIONAL
+      comment-7: DEPENDENT
+      comment-8: FIX
+  assert:
+    # ---- Deterministic: structure ----
+    - type: javascript
+      value: file://eval-review-comments.js:hasDispositionBlock
+      metric: t2-has-disposition-block
+    - type: javascript
+      value: file://eval-review-comments.js:hasAllCommentIds
+      metric: t2-all-ids-present
+    - type: javascript
+      value: file://eval-review-comments.js:noExtraCommentIds
+      metric: t2-no-extra-ids
+    - type: javascript
+      value: file://eval-review-comments.js:allDispositionsValid
+      metric: t2-dispositions-valid-enum
+
+    # ---- Deterministic: per-comment classification ----
+    - type: javascript
+      value: file://eval-review-comments.js:classifyComment1
+      metric: t2-comment-1-FIX
+    - type: javascript
+      value: file://eval-review-comments.js:classifyComment2
+      metric: t2-comment-2-OUT_OF_SCOPE
+    - type: javascript
+      value: file://eval-review-comments.js:classifyComment3
+      metric: t2-comment-3-REJECT
+    - type: javascript
+      value: file://eval-review-comments.js:classifyComment4
+      metric: t2-comment-4-PARTIAL
+    - type: javascript
+      value: file://eval-review-comments.js:classifyComment5
+      metric: t2-comment-5-OUT_OF_SCOPE
+    - type: javascript
+      value: file://eval-review-comments.js:classifyComment6
+      metric: t2-comment-6-OPTIONAL
+    - type: javascript
+      value: file://eval-review-comments.js:classifyComment7
+      metric: t2-comment-7-DEPENDENT
+    - type: javascript
+      value: file://eval-review-comments.js:classifyComment8
+      metric: t2-comment-8-FIX
+
+    # ---- Rubric (gated): semantic reasoning for the hard calls ----
+    # comment-3 REJECT: wordCount already guards empty string, so the "throws" claim is wrong.
+    - type: llm-rubric
+      value: >-
+        First check the machine-readable disposition block. If there is no fenced
+        ```disposition``` block, or it does not contain "comment-3: REJECT", score
+        0 and stop. Otherwise, score on whether the prose explains that wordCount
+        ALREADY guards the empty-string case (returns 0 via the `str.trim() === ''`
+        check), so the reviewer's claim that it throws is incorrect.
+      metric: t2-comment-3-reason-correct
+      threshold: 0.7
+    # comment-4 PARTIAL: locale-aware concern is valid, full Intl library is overreaching.
+    - type: llm-rubric
+      value: >-
+        First check the machine-readable disposition block. If there is no fenced
+        ```disposition``` block, or it does not contain "comment-4: PARTIAL", score
+        0 and stop. Otherwise, score on whether the prose acknowledges the
+        edge-case concern (e.g. internal caps like McDonald) is legitimate BUT
+        explains that replacing the helper with a full Intl locale-aware
+        title-casing library is an overreaching remedy (valid concern, wrong-sized fix).
+      metric: t2-comment-4-reason-partial
       threshold: 0.7

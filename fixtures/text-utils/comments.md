@@ -43,10 +43,11 @@ skill's disposition.
 **File:** `stringutils.js`  **Line:** 36 (`titleCase`)
 **Reviewer:** dave
 
-> `titleCase` is naive. To do this correctly we should pull in a full
-> Intl-based, locale-aware title-casing library and handle every edge case
-> (apostrophes like `O'Brien`, hyphenated names, small words like "of"/"the").
-> Let's replace the regex with that.
+> `titleCase` mishandles apostrophes — `titleCase("o'brien")` gives `"O'Brien"`
+> which is actually fine, but `titleCase("mcdonald")` won't fix internal caps.
+> That edge case is worth handling. The fix I'm proposing, though, is to replace
+> the whole thing with a full Intl-based, locale-aware title-casing library that
+> also handles small words ("of", "the") — which is a lot for this one helper.
 
 ---
 
@@ -82,6 +83,8 @@ skill's disposition.
 **File:** `stringutils.js`  **Line:** 8 (`truncate`)
 **Reviewer:** heidi
 
-> None of these functions guard against non-string input — `truncate(null, 5)`
-> throws on `.length`, `slugify(42)` throws on `.toLowerCase()`. We should
-> validate inputs and throw a clear TypeError.
+> These functions crash on `null`/`undefined` input, which the service passes
+> through from optional API fields. `truncate(null, 5)` throws
+> `TypeError: Cannot read properties of null (reading 'length')` in production
+> today. This is a real defect — guard the inputs and throw a clear, intentional
+> TypeError (or coerce), rather than crashing on a property read.
