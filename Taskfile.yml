@@ -1,0 +1,27 @@
+version: "3"
+
+tasks:
+  default:
+    desc: Show available tasks
+    cmds:
+      - task --list
+
+  eval:
+    desc: Run all promptfoo evaluations (always --no-cache; scripts/prompt live in external files)
+    cmds:
+      - "npx promptfoo eval --no-cache --config promptfooconfig.yaml"
+
+  view:
+    desc: Open the Promptfoo dashboard with all evaluation history
+    cmds:
+      - "npx promptfoo view"
+
+  view:last:
+    desc: Open the latest evaluation results in the default browser
+    cmds:
+      - "open results.html"
+
+  clean:
+    desc: Remove evaluation artifacts
+    cmds:
+      - "rm -f results.html results.json results.csv"
