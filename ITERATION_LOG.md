@@ -25,22 +25,25 @@ Every number below comes from a `task eval` run — nothing is hand-computed.
 Deterministic-heavy suite (11 deterministic + 2 gated rubric assertions) against
 fixture PR #1. Pass rate per metric, by step.
 
-| Metric                          | Type            | 🔴 Step 1 (Red) |
-|---------------------------------|-----------------|:---------------:|
-| has-disposition-block           | deterministic   | 0%              |
-| all-ids-present                 | deterministic   | 0%              |
-| no-extra-ids                    | deterministic   | 100%¹           |
-| dispositions-valid-enum         | deterministic   | 0%              |
-| comment-1-FIX                   | deterministic   | 0%              |
-| comment-2-FIX                   | deterministic   | 0%              |
-| comment-3-FIX                   | deterministic   | 0%              |
-| comment-4-OPTIONAL              | deterministic   | 0%              |
-| comment-5-OUT_OF_SCOPE          | deterministic   | 0%              |
-| comment-6-REJECT                | deterministic   | 0%              |
-| comment-7-DEPENDENT             | deterministic   | 0%              |
-| comment-6-reason-correct        | rubric (gated)  | 0%              |
-| comment-7-reason-dependency     | rubric (gated)  | 0%              |
-| **Overall test case**           |                 | **❌ FAIL**     |
+| Metric                          | Type            | 🔴 Step 1 (Red) | 🟢 Step 2 (Green) |
+|---------------------------------|-----------------|:---------------:|:-----------------:|
+| has-disposition-block           | deterministic   | 0%              | 100%              |
+| all-ids-present                 | deterministic   | 0%              | 100%              |
+| no-extra-ids                    | deterministic   | 100%¹           | 100%              |
+| dispositions-valid-enum         | deterministic   | 0%              | 100%              |
+| comment-1-FIX                   | deterministic   | 0%              | 100%              |
+| comment-2-FIX                   | deterministic   | 0%              | 100%              |
+| comment-3-FIX                   | deterministic   | 0%              | 100%              |
+| comment-4-OPTIONAL              | deterministic   | 0%              | 100%              |
+| comment-5-OUT_OF_SCOPE          | deterministic   | 0%              | 100%              |
+| comment-6-REJECT                | deterministic   | 0%              | 100%              |
+| comment-7-DEPENDENT             | deterministic   | 0%              | 100%              |
+| comment-6-reason-correct        | rubric (gated)  | 0%              | 100%              |
+| comment-7-reason-dependency     | rubric (gated)  | 0%              | 100%              |
+| **Overall test case**           |                 | **❌ FAIL**     | **✅ PASS**       |
+
+**Step 1 → Step 2 delta: 12 of 13 metrics moved 0% → 100%; test case FAIL → PASS.**
+Confirmed stable across 3 consecutive runs (all 13 metrics 100% each run).
 
 ¹ `no-extra-ids` is a vacuous pass at Red: the NOP output parses zero comment
 ids, so "no extra ids" is trivially true. It becomes load-bearing once the
@@ -128,3 +131,57 @@ and the gated rubrics correctly refuse to credit reasoning with no valid block.
 > (c) specifies the trailing disposition block format, then the structural and
 > classification checks flip Green and the gated reasoning rubrics become live.
 > Step 2 writes that prompt and records the Green delta.
+
+
+---
+
+## 🟢 Step 2 — Green: structured skill prompt passes the suite
+
+**Date:** 2026-09-23
+**Prompt:** `review-pr-comments-prompt.md` — replaced the NOP with a structured
+skill (~69 lines): senior-engineer role, the 5-verdict vocabulary with decision
+criteria for each disposition, an instruction to address every comment id, and
+the exact hybrid output contract (prose sections + a trailing `disposition`
+block).
+**Tests:** unchanged from Step 1 (same 13 assertions) — only the prompt changed,
+so the delta is attributable to the prompt.
+
+### What changed (Step 1 → Step 2)
+
+| Section added to the prompt | Which metrics it drives |
+|-----------------------------|-------------------------|
+| Verdict vocabulary + per-disposition decision criteria | the 7 `comment-N` classification checks |
+| "Read the code before judging; a false bug claim is REJECT" | `comment-6-REJECT` + `comment-6-reason-correct` |
+| "Name the comment id(s) a DEPENDENT item waits on" | `comment-7-DEPENDENT` + `comment-7-reason-dependency` |
+| Output contract: trailing ```disposition``` block, one `comment-N: VERDICT` per line | `has-disposition-block`, `all-ids-present`, `no-extra-ids`, `dispositions-valid-enum` |
+
+The example block in the prompt uses generic placeholder verdicts (NOT the
+fixture's answers), so the model must reason about the fixture rather than copy.
+
+### Results — Green
+
+Overall **1/1 PASS**; all 13 metrics 100%. Both gated reasoning rubrics are now
+live (structure present) and passing. See the cumulative table above.
+
+### Stability
+
+Ran `task metrics` 3 consecutive times: every run scored 13/13 at 100% with the
+test case PASS. The suite is deterministic-heavy (11 of 13 checks are pure
+parse-and-compare), so run-to-run variance is minimal; the 2 gated rubrics also
+held at 100% across all three runs.
+
+### Reasoning
+
+The NOP had no notion of the verdict vocabulary or output contract, so it failed
+every structural and classification check (Step 1). Spelling out (a) the
+dispositions and how to choose among them, (b) the requirement to address each
+comment, and (c) the machine-readable block format was sufficient to flip the
+entire suite Green in one change — the load-bearing content is the decision
+criteria plus the output contract, nothing more.
+
+### Next
+
+Coverage is currently one fixture (PR #1). Future steps should add fixtures for
+cases this prompt has not been tested against (clean PR with no real issues,
+conflicting reviewers, already-addressed comments, non-JS source) to probe
+where the prompt over- or under-classifies, then iterate.
