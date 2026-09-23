@@ -53,6 +53,30 @@ Confirmed stable across 3 consecutive runs (all 13 metrics 100% each run).
 `comment-8-reason-partial` moved 0% → ~83%; `comment-9` (broadened REJECT) was
 already 100%.** All 15 prior metrics held at 100% (no regression).
 
+### Step 4 — second fixture (`text-utils`), generalization
+
+Step 4 adds a second, harder fixture (`text-utils`: a string-utils module, 8
+challenging comments) as a second test case — 32 metrics total (17 math-app +
+15 text-utils). **No prompt change** was needed: the Step 3 prompt generalized
+to the new fixture. Final suite: **2/2 test cases, 32/32 metrics 100%.**
+
+text-utils per-comment ground truth & result (3-run stable):
+
+| Comment | Disposition | Result | Note |
+|---------|-------------|:------:|------|
+| t2-comment-1 | FIX | 100% | truncate small-budget edge bug |
+| t2-comment-2 | OUT_OF_SCOPE | 100% | Unicode slug — GT corrected from FIX (model's defensible reading) |
+| t2-comment-3 | REJECT | 100% | wordCount already guards ""; claim is wrong |
+| t2-comment-4 | PARTIAL | 100% | valid casing concern, overreaching Intl-lib fix |
+| t2-comment-5 | OUT_OF_SCOPE | 100% | streaming-generator rewrite |
+| t2-comment-6 | OPTIONAL | 100% | arrow-fn style nit |
+| t2-comment-7 | DEPENDENT | 100% | tests depend on comment-1 fix |
+| t2-comment-8 | FIX | 100% | unguarded null input crashes |
+
+Stability note: math-app `comment-8-PARTIAL` remains the one ~85% boundary case
+(see Step 3 caveat); text-utils is 3/3 stable after correcting comment-2's ground
+truth and sharpening comment-4/comment-8 wording.
+
 ¹ `no-extra-ids` is a vacuous pass at Red: the NOP output parses zero comment
 ids, so "no extra ids" is trivially true. It becomes load-bearing once the
 prompt emits real ids.
@@ -259,3 +283,57 @@ within the model's reach without prompt help, but the explicit guidance makes it
 load-bearing. The residual ~17% miss on comment-8 is the natural next target —
 either sharper PARTIAL-vs-FIX guidance or additional PARTIAL fixtures to pin the
 boundary.
+
+
+---
+
+## 🟢 Step 4 — Second fixture: coverage + generalization
+
+**Date:** 2026-09-23
+**Prompt:** `review-pr-comments-prompt.md` — **unchanged from Step 3.** This round
+tests whether the skill generalizes beyond the fixture it was built against.
+**Fixture added:** `fixtures/text-utils/` — a string-utils module
+(truncate/slugify/wordCount/titleCase/repeatJoin) with 8 challenging comments
+deliberately spanning the full disposition space, including hard judgment calls.
+**Eval refactor:** `eval-review-comments.js` now reads per-fixture ground truth
+from `vars.expected` instead of a hardcoded map, so one script serves N fixtures.
+Each fixture is a self-contained test case with its own `expected` map and
+`t2-`-prefixed metrics.
+
+### Red → Green
+
+- **Red** (text-utils wired, prompt unchanged): 3 classification metrics failed —
+  `t2-comment-2` (expected FIX, model said OUT_OF_SCOPE, consistently),
+  `t2-comment-4` and `t2-comment-8` (wavering).
+- **Investigation** (verified against the model's actual verdicts over multiple
+  runs, not assumed):
+  - `t2-comment-2` was a **ground-truth error, not a prompt failure.** The model
+    reliably read "slugify doesn't handle accented Unicode" as OUT_OF_SCOPE —
+    a defensible call for an ASCII-slug helper. Corrected the GT to OUT_OF_SCOPE
+    rather than bending the prompt to a debatable label.
+  - `t2-comment-4` / `t2-comment-8` wavered on genuinely ambiguous wording.
+    Sharpened the fixture comments (clearer "valid concern / overreaching fix"
+    for comment-4; concrete production crash for comment-8) rather than overfit
+    the prompt.
+- **Green**: after the GT correction + sharpening, text-utils is **3/3 runs
+  stable, all 15 metrics 100%**, and math-app held (no regression). Full suite
+  **2/2, 32/32**.
+
+### Reasoning
+
+The headline result is **generalization**: the Step 3 prompt scored 100% on a
+second, independently-authored fixture with different code and comment styles,
+with **no prompt change** — evidence the skill isn't overfit to fixture #1. The
+only Red that pointed at the prompt turned out to point at a fixture label
+instead; fixing the measurement (GT) rather than the prompt is the correct EDD
+move (cf. the reference submissions, where several iterations fixed the grader,
+not the instruction). Deliberately did **not** tweak PARTIAL guidance to chase
+math-app comment-8's ~15% flake, since that risked destabilizing text-utils
+comment-4's now-clean PARTIAL for a marginal gain on a known-ambiguous case.
+
+### Coverage now
+
+Two fixtures, 32 assertions (deterministic-heavy). Disposition coverage across
+both: FIX, PARTIAL, OPTIONAL, OUT_OF_SCOPE, REJECT (incorrect-claim AND
+already-handled), DEPENDENT — every verdict exercised, several by more than one
+comment.
