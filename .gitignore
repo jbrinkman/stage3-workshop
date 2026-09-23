@@ -7,6 +7,9 @@
 # Scratch dir used by `task metrics`
 tmp/
 
+# Ablation harness temp files (scripts/ablate.js)
+.ablate-tmp-*
+
 # Node modules
 node_modules/
 

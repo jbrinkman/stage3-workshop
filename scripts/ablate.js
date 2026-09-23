@@ -19,13 +19,15 @@ const { execSync } = require('child_process');
 const ROOT = path.resolve(__dirname, '..');
 const PROMPT = path.join(ROOT, 'review-pr-comments-prompt.md');
 const CONFIG = path.join(ROOT, 'promptfooconfig.yaml');
-const TMP = path.join(ROOT, 'tmp', 'ablate');
+// Temp files MUST live in the project root: the config's file:// refs for the
+// provider (./kiro.js), test suite, and fixtures resolve relative to the config
+// file's directory, so a temp config elsewhere would break them.
+const TMP_PREFIX = '.ablate-tmp';
 const RUNS = parseInt(process.argv[2] || '3', 10);
 
 const promptSrc = fs.readFileSync(PROMPT, 'utf8');
 const baseConfig = fs.readFileSync(CONFIG, 'utf8');
 
-// Discover ablation section names.
 const sectionNames = [...promptSrc.matchAll(/<!--\s*ablate:([\w-]+)\s*-->/g)].map((m) => m[1]);
 
 function stripSection(src, name) {
@@ -36,30 +38,28 @@ function stripSection(src, name) {
   return src.replace(re, '');
 }
 
-// Run the suite against a given prompt file; return overall pass count + total.
-function runSuite(promptFileAbs, label) {
-  const cfgPath = path.join(TMP, `config-${label}.yaml`);
-  const outPath = path.join(TMP, `out-${label}.json`);
-  // Rewrite the prompts: line in a copy of the real config to point at the variant.
+const tmpFiles = [];
+
+function runSuite(promptRelName, label) {
+  const cfgName = `${TMP_PREFIX}-config-${label}.yaml`;
+  const outName = `${TMP_PREFIX}-out-${label}.json`;
+  tmpFiles.push(path.join(ROOT, cfgName), path.join(ROOT, outName));
   const cfg = baseConfig.replace(
     /prompts:\s*\n\s*-\s*["']?[^"'\n]+["']?/,
-    `prompts:\n  - "file://${promptFileAbs}"`
+    `prompts:\n  - "file://${promptRelName}"`
   );
-  fs.writeFileSync(cfgPath, cfg);
+  fs.writeFileSync(path.join(ROOT, cfgName), cfg);
   let passes = 0;
   let total = 0;
   for (let i = 0; i < RUNS; i++) {
     try {
-      execSync(
-        `npx promptfoo eval --no-cache --config "${cfgPath}" --output "${outPath}"`,
-        { cwd: ROOT, stdio: 'ignore' }
-      );
+      execSync(`npx promptfoo eval --no-cache --config "${cfgName}" --output "${outName}"`,
+        { cwd: ROOT, stdio: 'ignore' });
     } catch (_) {
       /* non-zero exit on test failure is expected */
     }
-    const r = JSON.parse(fs.readFileSync(outPath, 'utf8'));
-    const root = r.results || r;
-    const rows = root.results || [];
+    const r = JSON.parse(fs.readFileSync(path.join(ROOT, outName), 'utf8'));
+    const rows = (r.results && r.results.results) || r.results || [];
     for (const row of rows) {
       total += 1;
       if (row.success) passes += 1;
@@ -69,21 +69,20 @@ function runSuite(promptFileAbs, label) {
 }
 
 function main() {
-  fs.mkdirSync(TMP, { recursive: true });
   console.log(`Ablation analysis — ${RUNS} run(s) per variant, ${sectionNames.length} sections\n`);
 
-  // Baseline: full prompt (markers are inert HTML comments).
-  const basePromptFile = path.join(TMP, 'prompt-baseline.md');
-  fs.writeFileSync(basePromptFile, promptSrc);
-  const baseline = runSuite(basePromptFile, 'baseline');
+  const baseName = `${TMP_PREFIX}-prompt-baseline.md`;
+  fs.writeFileSync(path.join(ROOT, baseName), promptSrc);
+  tmpFiles.push(path.join(ROOT, baseName));
+  const baseline = runSuite(baseName, 'baseline');
   console.log(`Baseline (full prompt): ${baseline.passes}/${baseline.total} test-case passes (${Math.round(baseline.rate * 100)}%)\n`);
 
   const results = [];
   for (const name of sectionNames) {
-    const variant = stripSection(promptSrc, name);
-    const vFile = path.join(TMP, `prompt-no-${name}.md`);
-    fs.writeFileSync(vFile, variant);
-    const r = runSuite(vFile, `no-${name}`);
+    const vName = `${TMP_PREFIX}-prompt-no-${name}.md`;
+    fs.writeFileSync(path.join(ROOT, vName), stripSection(promptSrc, name));
+    tmpFiles.push(path.join(ROOT, vName));
+    const r = runSuite(vName, `no-${name}`);
     const delta = r.rate - baseline.rate;
     results.push({ name, ...r, delta });
     console.log(`  - removed ${name.padEnd(16)} -> ${r.passes}/${r.total} (${Math.round(r.rate * 100)}%)  Δ ${(delta * 100).toFixed(0)}pp`);
@@ -97,8 +96,7 @@ function main() {
     console.log(`| ${r.name} | ${Math.round(baseline.rate * 100)}% | ${Math.round(r.rate * 100)}% | ${(r.delta * 100).toFixed(0)}pp | ${verdict} |`);
   }
 
-  // Cleanup temp variants/configs (keep nothing).
-  fs.rmSync(TMP, { recursive: true, force: true });
+  for (const f of tmpFiles) fs.rmSync(f, { force: true });
   console.log('\n(cruft candidate = removing it did not lower the score across the runs; confirm with more runs before trimming.)');
 }
 
